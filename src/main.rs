@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use chrono_tz::Asia::Seoul;
 use dotenvy::dotenv;
+use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string};
 use std::env;
@@ -36,7 +37,10 @@ struct Body {
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     dotenv().expect(".env file not found");
+    info!("Environment file loaded");
 
     let config_url = env::var("CONFIG_URL").unwrap();
 
@@ -45,20 +49,23 @@ async fn main() {
     let mut interval = time::interval(Duration::from_secs(60 * 60));
     loop {
         interval.tick().await;
-        tasks.shutdown().await;
+        info!("Timer tick occurred");
 
-        let resp = reqwest::get(config_url.clone())
+        let resp = reqwest::get(&config_url)
             .await
             .unwrap()
             .text()
             .await
             .unwrap();
         let config: Config = from_str(resp.as_str()).unwrap();
+        info!("Configuration fetched");
 
+        tasks.shutdown().await;
+        info!("Tasks have been shutted down");
+
+        let now = chrono::Utc::now().with_timezone(&Seoul).timestamp();
         for hook in config.hooks {
-            let now = chrono::Utc::now().with_timezone(&Seoul).timestamp();
-
-            let hook_url = env::var(hook.to).unwrap();
+            let hook_url = env::var(&hook.to).unwrap();
             let at: Vec<i64> = hook
                 .at
                 .iter()
@@ -79,9 +86,12 @@ async fn main() {
                         continue;
                     }
 
+                    let to = hook.to.clone();
                     let url = hook_url.clone();
                     let message = reminder.message.clone();
                     tasks.spawn(async move {
+                        info!("Task spawned; to {} after {} second(s)", to, left);
+
                         sleep(Duration::from_secs(left.try_into().unwrap())).await;
 
                         let client = reqwest::Client::new();
