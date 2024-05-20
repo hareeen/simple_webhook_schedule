@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use chrono_tz::Asia::Seoul;
 use dotenvy::dotenv;
-use log::info;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string};
 use std::env;
@@ -60,8 +60,10 @@ async fn main() {
         let config: Config = from_str(resp.as_str()).unwrap();
         info!("Configuration fetched");
 
+        info!("Refreshing; count={}", tasks.len());
+
         tasks.shutdown().await;
-        info!("Tasks have been shutted down");
+        info!("Aborted all tasks");
 
         let now = chrono::Utc::now().with_timezone(&Seoul).timestamp();
         for hook in config.hooks {
@@ -83,6 +85,7 @@ async fn main() {
                 for reminder in &config.reminders {
                     let left = t.checked_sub_unsigned(reminder.before).unwrap();
                     if left < 0 {
+                        warn!("Skipping a completed task; hook={} delta={}", hook.to, left);
                         continue;
                     }
 
@@ -90,7 +93,7 @@ async fn main() {
                     let url = hook_url.clone();
                     let message = reminder.message.clone();
                     tasks.spawn(async move {
-                        info!("Task spawned; to {} after {} second(s)", to, left);
+                        info!("A task spawned; hook={} delta={}", to, left);
 
                         sleep(Duration::from_secs(left.try_into().unwrap())).await;
 
@@ -106,9 +109,13 @@ async fn main() {
                             .send()
                             .await
                             .unwrap();
+
+                        info!("A task finished; hook={}", to);
                     });
                 }
             }
+
+            info!("Refreshed; count={}", tasks.len());
         }
     }
 }
