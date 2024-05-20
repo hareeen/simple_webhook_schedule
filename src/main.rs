@@ -85,7 +85,7 @@ async fn main() {
                 for reminder in &config.reminders {
                     let left = t.checked_sub_unsigned(reminder.before).unwrap();
                     if left < 0 {
-                        warn!("Skipping a completed task; hook={} delta={}", hook.to, left);
+                        warn!("Skipping the completed task; hook={} delta={}", hook.to, left);
                         continue;
                     }
 
@@ -93,7 +93,7 @@ async fn main() {
                     let url = hook_url.clone();
                     let message = reminder.message.clone();
                     tasks.spawn(async move {
-                        info!("A task spawned; hook={} delta={}", to, left);
+                        info!("Spawned; hook={} delta={}", to, left);
 
                         sleep(Duration::from_secs(left.try_into().unwrap())).await;
 
@@ -110,7 +110,7 @@ async fn main() {
                             .await
                             .unwrap();
 
-                        info!("A task finished; hook={}", to);
+                        info!("Message sent; hook={}", to);
                     });
                 }
             }
