@@ -57,7 +57,7 @@ async fn main() {
 
     let config: Config = Figment::new()
         .merge(Serialized::defaults(Config::default()))
-        .merge(Toml::file("Config.toml"))
+        .merge(Toml::file("schedule.toml"))
         .extract()
         .expect("Failed to load configuration");
     info!("Configuration fetched");
