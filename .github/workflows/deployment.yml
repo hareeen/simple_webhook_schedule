@@ -4,6 +4,9 @@ on:
   push:
     branches: ["main"]
 
+env:
+  DOCKER_TAG: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -46,7 +49,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ${{ env.DOCKER_TAG }}
           platforms: linux/amd64
 
       - uses: appleboy/ssh-action@master
@@ -55,7 +58,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ${{ env.DOCKER_TAG }}
             docker stop simple_webhook_schedule || true
             docker rm simple_webhook_schedule || true
-            docker run -d --name simple_webhook_schedule --restart on-failure --env-file ~/workspace/simple_webhook_schedule/.env ghcr.io/${{ github.repository }}:latest
+            docker run -d --name simple_webhook_schedule --restart on-failure --env-file ~/workspace/simple_webhook_schedule/.env ${{ env.DOCKER_TAG }}
