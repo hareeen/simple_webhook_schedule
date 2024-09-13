@@ -30,6 +30,10 @@ jobs:
             cargo-
 
       - run: |
+          sudo apt update
+          sudo apt install -y libssl-dev
+
+      - run: |
           cross -V || cargo install cross --git https://github.com/cross-rs/cross
           cross build --release --target x86_64-unknown-linux-musl
 
