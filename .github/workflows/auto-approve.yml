@@ -11,6 +11,8 @@ jobs:
       contents: read
       pull-requests: write
 
+    if: ${{ contains(fromJSON(vars.TRUSTED_ACTORS), github.actor) }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,4 +33,4 @@ jobs:
           result-encoding: boolean
 
       - uses: hmarr/auto-approve-action@v4
-        if: steps.check-changes.outputs.result && ['rainy21'].includes(github.actor)
+        if: steps.check-changes.outputs.result
