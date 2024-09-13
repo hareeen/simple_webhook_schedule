@@ -5,11 +5,15 @@ on:
     branches: ["main"]
 
 env:
-  DOCKER_TAG: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+  DOCKER_TAG: ghcr.io/${{ github.repository }}:latest
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +55,8 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_TAG }}
           platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - uses: appleboy/ssh-action@master
         with:
