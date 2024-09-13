@@ -19,3 +19,4 @@ toml = "0.8.19"
 dotenvy = "0.15.7"
 serde_with = "3.9.0"
 thiserror = "1.0.63"
+openssl = { version = "0.10.66", features = ["vendored"] }
