@@ -35,22 +35,13 @@ jobs:
               core.setFailed(message)
             }
 
+      - uses: peter-evans/enable-pull-request-automerge@v3
+        if: ${{ success() }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash
+
       - uses: hmarr/auto-approve-action@v4
         if: ${{ success() }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Enable auto-merge
-        uses: peter-evans/enable-pull-request-automerge@v3
-        if: ${{ success() }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          merge-method: squash
-
-      - name: Merge Pull Request
-        uses: peter-evans/merge-pull-request@v3
-        if: ${{ success() }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request: ${{ github.event.pull_request.number }}
-          merge-method: squash
