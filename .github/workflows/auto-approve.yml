@@ -28,11 +28,12 @@ jobs:
             const { commits } = context.payload.pull_request
             const rawFiles = execSync(`git diff --name-only HEAD HEAD~${commits}`).toString()
             const files = rawFiles.split('\n').filter(Boolean)
+            const eligible = files.length === 1 && files[0] === 'schedule.toml'
 
-            return {
-              eligible: files.length === 1 && files[0] === 'schedule.toml'
+            if (!eligible) {
+              const message = 'This PR does modify files other than `schedule.toml` or the commit is empty.'
+              core.setFailed(message)
             }
-          result-encoding: json
 
       - uses: hmarr/auto-approve-action@v4
-        if: ${{ steps.check-changes.outputs.result.eligible }}
+        if: ${{ success() }}
