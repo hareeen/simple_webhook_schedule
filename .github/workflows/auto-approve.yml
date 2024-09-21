@@ -29,8 +29,10 @@ jobs:
             const rawFiles = execSync(`git diff --name-only HEAD HEAD~${commits}`).toString()
             const files = rawFiles.split('\n').filter(Boolean)
 
-            return files.length === 1 && files[0] === 'schedule.toml'
-          result-encoding: boolean
+            return {
+              success: files.length === 1 && files[0] === 'schedule.toml'
+            }
+          result-encoding: json
 
       - uses: hmarr/auto-approve-action@v4
-        if: steps.check-changes.outputs.result
+        if: steps.check-changes.outputs.result.success
