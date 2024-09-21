@@ -29,6 +29,8 @@ jobs:
             const rawFiles = execSync(`git diff --name-only HEAD HEAD~${commits}`).toString()
             const files = rawFiles.split('\n').filter(Boolean)
 
+            console.log(files)
+
             return {
               success: files.length === 1 && files[0] === 'schedule.toml'
             }
