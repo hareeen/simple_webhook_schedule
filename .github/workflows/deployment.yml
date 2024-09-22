@@ -3,6 +3,18 @@ name: Deployment
 on:
   push:
     branches: ["main"]
+    paths:
+      - src/**
+      - Cargo.toml
+      - Cargo.lock
+      - Dockerfile
+      - schedule.toml
+      - .github/workflows/deployment.yml
+  workflow_run:
+    workflows: ["Auto Approve"]
+    types:
+      - completed
+
 
 env:
   DOCKER_TAG: ghcr.io/${{ github.repository }}:latest
@@ -10,6 +22,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
 
     permissions:
       contents: read
