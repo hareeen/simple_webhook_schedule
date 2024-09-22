@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: read, write
       pull-requests: write
 
     if: ${{ contains(fromJSON(vars.TRUSTED_ACTORS), github.actor) }}
@@ -36,13 +36,12 @@ jobs:
               core.setFailed(message)
             }
 
-      - uses: peter-evans/enable-pull-request-automerge@v3
-        if: ${{ success() }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          merge-method: squash
-
       - uses: hmarr/auto-approve-action@v4
         if: ${{ success() }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - if: ${{ success() }}
+        run: gh pr merge --merge --auto "1"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
