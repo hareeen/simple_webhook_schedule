@@ -5,10 +5,10 @@ on:
     branches: ["main"]
     paths:
       - src/**
+      - schedules/**
       - Cargo.toml
       - Cargo.lock
       - Dockerfile
-      - schedule.toml
       - .github/workflows/deployment.yml
   workflow_run:
     workflows: ["Auto Approve"]

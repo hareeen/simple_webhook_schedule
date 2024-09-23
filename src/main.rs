@@ -22,24 +22,21 @@ struct Reminder {
 
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug)]
-struct Hook {
+struct Config {
     to: String,
 
     #[serde_as(as = "Vec<TomlDatetimeAsChronoDateTimeSeoul>")]
     at: Vec<chrono::DateTime<Tz>>,
-}
 
-#[derive(Deserialize, Serialize, Debug)]
-struct Config {
     reminders: Vec<Reminder>,
-    hooks: Vec<Hook>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
+            to: String::new(),
+            at: Vec::new(),
             reminders: Vec::new(),
-            hooks: Vec::new(),
         }
     }
 }
@@ -55,19 +52,27 @@ async fn main() {
 
     dotenv().ok();
 
-    let config: Config = Figment::new()
-        .merge(Serialized::defaults(Config::default()))
-        .merge(Toml::file("schedule.toml"))
-        .extract()
-        .expect("Failed to load configuration");
-    info!("Configuration fetched");
+    let configs: Vec<Config> = std::fs::read_dir("schedules")
+        .unwrap()
+        .map(|entry| {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            let config: Config = Figment::new()
+                .merge(Serialized::defaults(Config::default()))
+                .merge(Toml::file(&path))
+                .extract()
+                .expect("Failed to load configuration");
+            info!("Configuration fetched: {:?}", path.file_name().unwrap());
+            config
+        })
+        .collect();
 
     let mut tasks = JoinSet::new();
 
     let now = chrono::Utc::now().with_timezone(&Seoul).timestamp();
-    for hook in config.hooks {
-        let hook_url = env::var(&hook.to).unwrap();
-        let at: Vec<i64> = hook.at.iter().map(|dt| dt.timestamp() - now).collect();
+    for config in configs {
+        let hook_url = env::var(&config.to).unwrap();
+        let at: Vec<i64> = config.at.iter().map(|dt| dt.timestamp() - now).collect();
 
         for t in at {
             for reminder in &config.reminders {
@@ -75,12 +80,12 @@ async fn main() {
                 if left < 0 {
                     debug!(
                         "Skipping the completed task: hook={} delta={}",
-                        hook.to, left
+                        config.to, left
                     );
                     continue;
                 }
 
-                let to = hook.to.clone();
+                let to = config.to.clone();
                 let url = hook_url.clone();
                 let message = reminder.message.clone();
                 tasks.spawn(async move {

@@ -29,10 +29,10 @@ jobs:
             const { commits } = context.payload.pull_request
             const rawFiles = execSync(`git diff --name-only HEAD HEAD~${commits}`).toString()
             const files = rawFiles.split('\n').filter(Boolean)
-            const eligible = files.length === 1 && files[0] === 'schedule.toml'
+            const eligible = files.every(file => file.startsWith('schedules/') && file.endsWith('.toml'))
 
             if (!eligible) {
-              const message = 'This PR modifies files other than `schedule.toml` or the commit is empty.'
+              const message = 'This PR modifies files outside of the schedules directory or adds files with an invalid extension.'
               core.setFailed(message)
             }
 
