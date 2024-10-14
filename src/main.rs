@@ -21,7 +21,7 @@ struct Reminder {
 }
 
 #[serde_as]
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 struct Config {
     to: String,
 
@@ -29,16 +29,6 @@ struct Config {
     at: Vec<chrono::DateTime<Tz>>,
 
     reminders: Vec<Reminder>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            to: String::new(),
-            at: Vec::new(),
-            reminders: Vec::new(),
-        }
-    }
 }
 
 #[derive(Serialize, Debug)]
@@ -112,5 +102,5 @@ async fn main() {
         }
     }
 
-    while let Some(_) = tasks.join_next().await {}
+    while (tasks.join_next().await).is_some() {}
 }
