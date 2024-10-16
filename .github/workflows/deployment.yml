@@ -1,6 +1,10 @@
 name: Deploy Image
 
 on:
+  push:
+    branches: ["main"]
+    paths:
+      - .github/workflows/deployment.yml
   workflow_run:
     workflows: ["Build and Push Image"]
     types:
